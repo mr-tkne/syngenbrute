@@ -1,0 +1,246 @@
+{
+  "title": "Elektron Digitone syngenbrute preset",
+  "vars": {
+    "ratio_b": 99
+  },
+  "params": [
+    {
+      "name": "Algo",
+      "min": 0,
+      "max": 7,
+      "cc": [90],
+      "category": "syn1"
+    },
+    {
+      "name": "Ratio C",
+      "min": 0,
+      "max": 127,
+      "cc": [91],
+      "category": "syn1"
+    },
+    {
+      "name": "Ratio A",
+      "min": 0,
+      "max": 127,
+      "cc": [92],
+      "category": "syn1"
+    },
+    {
+      "name": "Ratio B1",
+      "min": 0,
+      "max": 18,
+      "cc": [16, 48],
+      "filter": "(ratio_b & 0x3E0) | value",
+      "store": "ratio_b",
+      "category": "syn1"
+    },
+    {
+      "name": "Ratio B2",
+      "min": 0,
+      "max": 18,
+      "cc": [16, 48],
+      "filter": "(ratio_b & 0x1F) | (value << 5)",
+      "store": "ratio_b",
+      "category": "syn1"
+    },
+    {
+      "name": "Harmonics",
+      "min": 0,
+      "max": 16383,
+      "cc": [17, 49],
+      "category": "syn1"
+    },
+    {
+      "name": "Detune",
+      "min": 0,
+      "max": 16383,
+      "cc": [18, 50],
+      "category": "syn1"
+    },
+    {
+      "name": "Feedback",
+      "min": 0,
+      "qmax": 16383,
+      "qcc": [19, 51],
+      "max": 127,
+      "cc": [19],
+      "category": "syn1"
+    },
+    {
+      "name": "Mix",
+      "min": 0,
+      "max": 16383,
+      "cc": [20, 52],
+      "category": "syn1"
+    },
+    {
+      "name": "A Env Attack",
+      "min": 0,
+      "max": 127,
+      "cc": [75],
+      "category": "syn2"
+    },
+    {
+      "name": "A Env Decay",
+      "min": 0,
+      "max": 127,
+      "cc": [76],
+      "category": "syn2"
+    },
+    {
+      "name": "A Env End",
+      "min": 0,
+      "max": 127,
+      "cc": [77],
+      "category": "syn2"
+    },
+    {
+      "name": "A Level",
+      "min": 0,
+      "max": 127,
+      "cc": [78],
+      "category": "syn2"
+    },
+    {
+      "name": "B Env Attack",
+      "min": 0,
+      "max": 127,
+      "cc": [79],
+      "category": "syn2"
+    },
+    {
+      "name": "B Env Decay",
+      "min": 0,
+      "max": 127,
+      "cc": [80],
+      "category": "syn2"
+    },
+    {
+      "name": "B Env End",
+      "min": 0,
+      "max": 127,
+      "cc": [81],
+      "category": "syn2"
+    },
+    {
+      "name": "B Level",
+      "min": 0,
+      "max": 127,
+      "cc": [82],
+      "category": "syn2"
+    },
+    {
+      "name": "Frequency",
+      "min": 0,
+      "max": 16383,
+      "cc": [23, 55],
+      "category": "filter"
+    },
+    {
+      "name": "Resonance",
+      "min": 0,
+      "max": 16383,
+      "cc": [24, 56],
+      "category": "filter"
+    },
+    {
+      "name": "Filter type",
+      "min": 0,
+      "max": 3,
+      "cc": [74],
+      "category": "filter"
+    },
+    {
+      "name": "FEG attack",
+      "min": 0,
+      "max": 127,
+      "cc": [70],
+      "category": "filter"
+    },
+    {
+      "name": "FEG decay",
+      "min": 0,
+      "max": 127,
+      "cc": [71],
+      "category": "filter"
+    },
+    {
+      "name": "FEG sustain",
+      "min": 0,
+      "max": 127,
+      "cc": [72],
+      "category": "filter"
+    },
+    {
+      "name": "FEG release",
+      "min": 0,
+      "max": 127,
+      "cc": [73],
+      "category": "filter"
+    },
+    {
+      "name": "FEG depth",
+      "min": 0,
+      "max": 16383,
+      "cc": [25, 57],
+      "category": "filter"
+    },
+    {
+      "name": "Filter2 base",
+      "min": 0,
+      "max": 16383,
+      "cc": [26, 58],
+      "category": "filter"
+    },
+    {
+      "name": "Filter2 width",
+      "min": 0,
+      "max": 16383,
+      "cc": [27, 59],
+      "category": "filter"
+    },
+
+    {
+      "name": "AEG attack",
+      "min": 0,
+      "max": 127,
+      "cc": [104],
+      "category": "amp"
+    },
+    {
+      "name": "AEG decay",
+      "min": 0,
+      "max": 127,
+      "cc": [105],
+      "category": "amp"
+    },
+    {
+      "name": "AEG sustain",
+      "min": 0,
+      "max": 127,
+      "cc": [106],
+      "category": "amp"
+    },
+    {
+      "name": "AEG release",
+      "min": 0,
+      "max": 127,
+      "cc": [107],
+      "category": "amp"
+    },
+    {
+      "name": "FEG depth",
+      "min": 0,
+      "max": 16383,
+      "cc": [25, 57],
+      "category": "amp"
+    },
+    {
+      "name": "Drive",
+      "min": 0,
+      "max": 16383,
+      "cc": [26, 58],
+      "category": "amp"
+    }
+  ]
+}
