@@ -11,17 +11,29 @@ from lib.simpleccpatch import SimpleCCPatch
 from lib.analyser import MFCCComparator
 from lib.genetic import GeneticModel
 
-sd.default.device = 'system'
+sd.default.device = 'jack'
+best_score = 1e42
+best_patch = None
+best_count = 0
 
 
 def trimpad(sample, startThreshold, length):
     start = 0
     end = length
-    for (idx, smp) in enumerate(sample):
+    buffer = np.array(sample)
+    # print('trimpad')
+    # print(buffer.max(), '..', buffer.min(), '; ', np.ptp(buffer))
+    normalized = (buffer - buffer.min()) / np.ptp(buffer) - 0.5
+    # print(normalized.max(), '..', normalized.min(), '; ', np.ptp(normalized))
+    for (idx, smp) in enumerate(normalized):
         if smp[0] > startThreshold:
             start = idx
             break
     return sample[start:end]
+
+
+def normalize(wav):
+    return 2*(wav - wav.min()) / np.ptp(wav) - 1
 
 
 def record(length, sample_rate, threshold):
@@ -32,9 +44,7 @@ def record(length, sample_rate, threshold):
     time.sleep(length/sample_rate)
     return trimpad(recording, threshold, length)
 
-best_score = 0.0
-best_patch = None
-best_count = 0
+
 def try_speciman(synth, midi_device, channel, comp, genetic_model, speciman, sample_length):
     global best_score
     global best_patch
@@ -52,32 +62,35 @@ def try_speciman(synth, midi_device, channel, comp, genetic_model, speciman, sam
     # wav = record(sample_length, comp.sample_rate, 100)
     for cmd in mido.parse_all(patch):
         outport.send(cmd)
+    wav = sd.rec(sample_length+800, comp.sample_rate, channels=1)
     outport.send(mido.Message('note_on', channel=channel, note=48))
-    wav = sd.rec(sample_length, comp.sample_rate, channels=1)
     # time.sleep(.001)
     sd.wait()
     outport.send(mido.Message('note_off', channel=channel, note=48))
-    # wav = trimpad(wav, 1, comp.target_length)
-
-    score = comp.compare_to(wav)
-    if score > best_score:
-        wavfile.write(f'specimen/best{best_count}.wav', 48000, wav)
+    wav = trimpad(wav, 0.01, comp.target_length)
+    normwav = normalize(wav)
+    wavfile.write(f'specimenx/feedback{speciman.values[0]}.wav', 48000, normwav)
+    wavfile.write(f'specimenx/orig{speciman.values[0]}.wav', 48000, wav)
+    score = comp.compare_to(normwav, 48000)
+    if score < best_score:
+        wavfile.write(f'specimen/best{best_count}.wav', 48000, normwav)
+        # wavfile.write(f'specimen/bestn{best_count}.wav', 48000, normwav)
         best_score = score
         best_patch = patch
         print(f'{best_count}. ', end='')
         best_count += 1
-        for (param, value) in zip(genetic_model.params, speciman.values):
-            synth.set_param(param['key'], int(round(value)))
-            print(f'{param["key"]} = {int(round(value))}; ', end='')
-        print(' Score -> ', score)
+    for (param, value) in zip(genetic_model.params, speciman.values):
+        synth.set_param(param['key'], int(round(value)))
+        print(f'{param["key"]} = {int(round(value))}; ', end='')
+    print(' Score -> ', score)
     return score
 
 
 def bruteforce_sound(path_to_wav, synth_def, params_def,
-                     target_score=0.9, pop_size=30, max_generations=100,
+                     target_score=50, pop_size=50, max_generations=100,
                      mutation_rate=0.05, midi_channel=10, midi_device=None):
     global best_patch
-    # print('z', synth_def)
+    print('z', synth_def)
     # synth = SimpleCCPatch(midi_channel, synth_def, ['Feedback', 'Mix'])
     synth = SimpleCCPatch(midi_channel, synth_def, ['Feedback'])
     outport = mido.open_output(midi_device)
@@ -119,7 +132,8 @@ if __name__ == "__main__":
                     # required=True,
                     help="synth.json file to use")
     ap.add_argument('-L', '--list-controls',
-                    type=str,
+                    action='store_true',
+                    default=False,
                     help="List all available synthesizer controls from synth.json")
     ap.add_argument('-t', '--tweak',
                     type=str,
@@ -152,8 +166,8 @@ if __name__ == "__main__":
         for out in mido.get_output_names():
             print(f'"{out}"')
         print("\nAudio inputs:")
-        for out in mido.get_output_names():
-            print(f'"{out}"')
+        for out in sd.query_devices():
+            print(f'"{out["name"]}"')
     if args.midi_out and args.channel:
         midi_outs = mido.get_output_names()
         if args.midi_out not in midi_outs:
@@ -214,6 +228,6 @@ if __name__ == "__main__":
                 #   "category": "syn1"
                 # }
                 ]
-            bruteforce_sound(args.input, args.synth, params_def, midi_device=args.midi_out, midi_channel=args.channel, max_generations=3, mutation_rate=0.25)
+            bruteforce_sound(args.input, args.synth, params_def, midi_device=args.midi_out, midi_channel=args.channel, max_generations=10, mutation_rate=0.25)
         else:
             midi_test(args.midi_out, args.channel)

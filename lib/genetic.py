@@ -2,19 +2,26 @@ import traceback
 import sys
 import math
 from random import random, randint
-
+import hashlib
 
 class Speciman:
     def __init__(self, params, id):
         self.id = id
-        self.values = [param['min'] + (param['max'] - param['min']) * random()
+        self.values = [int(param['min'] + (param['max'] - param['min']) * random())
                        for param in params]
         self.score = None
+
+    def hash(self):
+        hash = hashlib.md5()
+        hash.update("".join(str(int(value)) for value in self.values).encode())
+        # print(hash, self.values)
+        return hash.hexdigest()
 
 
 class GeneticModel:
     def __init__(self, pop_size=20, mutation_ratio=.25, mutation_decline=0.98,
                  epoch=100, adjust_limits_each_epoch=True):
+        self.test_results = {}
         self.maxleaders = 5
         self.params = []
         self.generations = []
@@ -79,7 +86,7 @@ class GeneticModel:
             speciman = Speciman(self.params, self._sid + i)
             for j in range(len(self.params)):
                 gene_source = randint(0, len(top)-1)
-                speciman.values[j] = top[gene_source].values[j]
+                speciman.values[j] = int(top[gene_source].values[j])
             gen.append(speciman)
         self._sid += crossover_size
         for i in range(random_size):
@@ -89,7 +96,7 @@ class GeneticModel:
         for i in range(clones_size):
             speciman = Speciman(self.params, self._sid + i)
             for j in range(len(self.params)):
-                speciman.values[j] = top[i % len(top)].values[j]
+                speciman.values[j] = int(top[i % len(top)].values[j])
             gen.append(speciman)
         self._sid += clones_size
         self.specimen += gen
@@ -116,7 +123,7 @@ class GeneticModel:
                 d = param['max'] - param['min']
                 newv = max(param['min'],
                            min(param['max'], oldv + d*mult*(1-2*random())))
-                speciman.values[idx] = newv
+                speciman.values[idx] = int(newv)
 
     def iterate(self):
         self.mutation_ratio *= self.mutation_decline
@@ -150,7 +157,12 @@ class GeneticModel:
             self.mutate2()
         for speciman in gen:
             try:
-                score = self.test_function(speciman)
+                hash = speciman.hash()
+                if hash in self.test_results:
+                    continue
+                else:
+                    score = self.test_function(speciman)
+                    self.test_results[hash] = score
             except:
                 traceback.print_tb(sys.exc_info()[2])
                 raise
