@@ -11,7 +11,7 @@ from lib.simpleccpatch import SimpleCCPatch
 from lib.analyser import MFCCComparator
 from lib.genetic import GeneticModel
 
-sd.default.device = 'jack'
+sd.default.device = 'system'
 best_score = 1e42
 best_patch = None
 best_count = 0
@@ -69,8 +69,8 @@ def try_speciman(synth, midi_device, channel, comp, genetic_model, speciman, sam
     outport.send(mido.Message('note_off', channel=channel, note=48))
     wav = trimpad(wav, 0.01, comp.target_length)
     normwav = normalize(wav)
-    wavfile.write(f'specimenx/feedback{speciman.values[0]}.wav', 48000, normwav)
-    wavfile.write(f'specimenx/orig{speciman.values[0]}.wav', 48000, wav)
+    # wavfile.write(f'specimenx/feedback{speciman.values[0]}.wav', 48000, normwav)
+    # wavfile.write(f'specimenx/orig{speciman.values[0]}.wav', 48000, wav)
     score = comp.compare_to(normwav, 48000)
     if score < best_score:
         wavfile.write(f'specimen/best{best_count}.wav', 48000, normwav)
@@ -79,10 +79,10 @@ def try_speciman(synth, midi_device, channel, comp, genetic_model, speciman, sam
         best_patch = patch
         print(f'{best_count}. ', end='')
         best_count += 1
-    for (param, value) in zip(genetic_model.params, speciman.values):
-        synth.set_param(param['key'], int(round(value)))
-        print(f'{param["key"]} = {int(round(value))}; ', end='')
-    print(' Score -> ', score)
+        for (param, value) in zip(genetic_model.params, speciman.values):
+            synth.set_param(param['key'], int(round(value)))
+            print(f'{param["key"]} = {int(round(value))}; ', end='')
+        print(' Score -> ', score)
     return score
 
 
@@ -92,7 +92,7 @@ def bruteforce_sound(path_to_wav, synth_def, params_def,
     global best_patch
     print('z', synth_def)
     # synth = SimpleCCPatch(midi_channel, synth_def, ['Feedback', 'Mix'])
-    synth = SimpleCCPatch(midi_channel, synth_def, ['Feedback'])
+    synth = SimpleCCPatch(midi_channel, synth_def, ['Algo', 'Ratio C', 'Ratio A', 'Ratio B1', 'Ratio B2', 'Harmonics', 'Detune', 'Feedback', 'Mix', 'A Level', 'B Level'])
     outport = mido.open_output(midi_device)
     comp = MFCCComparator(path_to_wav)
     length = comp.target_length
@@ -181,38 +181,59 @@ if __name__ == "__main__":
         args.channel -= 1
         if args.input:
             params_def = [
-                # {
-                #   "name": "Ratio C",
-                #   "min": 0,
-                #   "max": 127,
-                #   "cc": [91],
-                #   "category": "syn1"
-                # },
-                # {
-                #   "name": "Ratio B1",
-                #   "min": 0,
-                #   "max": 18,
-                #   "cc": [16, 48],
-                #   "filter": "(ratio_b & 0x3E0) | value",
-                #   "store": "ratio_b",
-                #   "category": "syn1"
-                # },
-                # {
-                #   "name": "Ratio B2",
-                #   "min": 0,
-                #   "max": 18,
-                #   "cc": [16, 48],
-                #   "filter": "(ratio_b & 0x1F) | (value << 5)",
-                #   "store": "ratio_b",
-                #   "category": "syn1"
-                # },
-                # {
-                #   "name": "Harmonics",
-                #   "min": 0,
-                #   "max": 16383,
-                #   "cc": [17, 49],
-                #   "category": "syn1"
-                # },
+                {
+                  "name": "Algo",
+                  "min": 0,
+                  "max": 7,
+                  "cc": [90],
+                  "category": "syn1"
+                },
+                {
+                  "name": "Ratio C",
+                  "min": 0,
+                  "max": 127,
+                  "cc": [91],
+                  "category": "syn1"
+                },
+                {
+                  "name": "Ratio A",
+                  "min": 0,
+                  "max": 127,
+                  "cc": [92],
+                  "category": "syn1"
+                },
+                {
+                  "name": "Ratio B1",
+                  "min": 0,
+                  "max": 18,
+                  "cc": [16, 48],
+                  "filter": "(ratio_b & 0x3E0) | value",
+                  "store": "ratio_b",
+                  "category": "syn1"
+                },
+                {
+                  "name": "Ratio B2",
+                  "min": 0,
+                  "max": 18,
+                  "cc": [16, 48],
+                  "filter": "(ratio_b & 0x1F) | (value << 5)",
+                  "store": "ratio_b",
+                  "category": "syn1"
+                },
+                {
+                  "name": "Harmonics",
+                  "min": 0,
+                  "max": 16383,
+                  "cc": [17, 49],
+                  "category": "syn1"
+                },
+                {
+                  "name": "Detune",
+                  "min": 0,
+                  "max": 16383,
+                  "cc": [18, 50],
+                  "category": "syn1"
+                },
                 {
                   "name": "Feedback",
                   "min": 0,
@@ -220,14 +241,28 @@ if __name__ == "__main__":
                   "cc": [19],
                   "category": "syn1"
                 },
-                # {
-                #   "name": "Mix",
-                #   "min": 0,
-                #   "max": 16383,
-                #   "cc": [20, 52],
-                #   "category": "syn1"
-                # }
+                {
+                  "name": "Mix",
+                  "min": 0,
+                  "max": 16383,
+                  "cc": [20, 52],
+                  "category": "syn1"
+                },
+                {
+                  "name": "A Level",
+                  "min": 0,
+                  "max": 127,
+                  "cc": [78],
+                  "category": "syn2"
+                },
+                {
+                  "name": "B Level",
+                  "min": 0,
+                  "max": 127,
+                  "cc": [82],
+                  "category": "syn2"
+                },
                 ]
-            bruteforce_sound(args.input, args.synth, params_def, midi_device=args.midi_out, midi_channel=args.channel, max_generations=10, mutation_rate=0.25)
+            bruteforce_sound(args.input, args.synth, params_def, midi_device=args.midi_out, midi_channel=args.channel, max_generations=50, mutation_rate=0.15)
         else:
             midi_test(args.midi_out, args.channel)
